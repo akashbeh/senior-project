@@ -1,0 +1,34 @@
+CMSI 4071 Fall 2025
+Project Proposal Feedback
+Project: Stock Software
+=========================
+
+Proposal Document [3 points]:
+-----------------------------
+Nice work here.  You have described your application very well, and reading
+through the first paragraph gives me a general sense of what your 'problem'
+is and how you plan to solve it.  The comparison with existing applications
+add context.  The features list is good to show what your plan is.
+
+The justification section is also good, complete and to the point without
+ONLY listing all the courses you took at LMU.  I like that you are treating
+the project as a learning opportunity as well as a chance to use your
+knowledge.
+
+Proposal Presentation [2 points]:
+---------------------------------
+Your presentation was very good, met all the requirements as listed, and
+provided enough detail so the audience saw interested without having so
+much text that they couldn't read it all before the next slide appeared.
+I enjoyed the presentation and you answered questions well.  Good audience
+reception, too.
+
+Summary:
+--------
+You don't have a copy of your proposal presentation in your repository, so
+that costs you a point.  Put a copy in there and let me know, and you'll
+get full credit.
+
+Nice job overall!  Keep up the good work.
+
+4 out of 5 for a B on this deliverable.
