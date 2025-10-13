@@ -1,0 +1,56 @@
+
+Documentation Feedback ~ Deliverable #2
+Software Requirements Specification
+Initial Development Schedule
+CMSI 4071 Fall 2025
+=======================================
+
+COMPONENT BREAKDOWN:
+====================
+This is a bare minimum in this section.  It would be better to have a 'real'
+   diagram with labeled boxes and lines and arrows to show the system parts
+   and how they interrelate.  Also, some sort of verbal description would
+   be good.
+
+FUNCTIONAL REQUIREMENTS:
+========================
+The document lists tools, libraries, APIs, and data sources (e.g., FinBERT,
+   Pandas, Alpaca, Binance, etc.).
+However, it lacks explicit functional requirements written in a structured,
+   testable format (e.g., “The system shall…”).
+There is no clear description of what the system is supposed to do from a
+   user or system perspective (e.g., trade execution, signal generation,
+   portfolio management).
+
+PERFORMANCE REQUIREMENTS:
+=========================
+No performance metrics are defined in the document.
+
+ENVIRONMENT REQUIREMENTS:
+=========================
+Lists tools and infrastructure, but lacks structure and completeness.
+
+OVERALL ASSESSMENT:
+   Category                          Points
+   Component Breakdown                 1/1
+   Functional Requirements             0/4
+   Performance Requirements            0/2
+   Environment Requirements            0/1
+                                     =====
+   Subtotal                            1/8
+   Preliminary Schedule                1/2
+   ------------------------------------------------------
+   Total Percentage:   2/10 = 2% which is not the best for this deliverable.
+
+There is really nothing here to work with.  You need to re-do this entire
+   document from scratch.  Look at the example document for TempConvApp
+   and the directions on the SRS web page on the course web site to find
+   out what is expected.
+Your preliminary schedule was supposed to be a Gantt or PERT chart.  You've
+   simply listed the deliverables with the weeks you're planning.  Make an
+   actual schedule chart that shows the durations and linkages with your
+   development.  Then include this in your SDP.
+
+Nice work on this deliverable!  Make the changes indicated by the end of the
+semester for full credit on the document.
+

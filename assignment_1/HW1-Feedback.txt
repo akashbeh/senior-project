@@ -1,0 +1,84 @@
+
+Essay Feedback
+Homework Assignment #1
+CMSI 4071 Fall 2025
+======================
+
+SUMMARY:
+The essay provides a detailed and accurate summary of William Langewiesche’s
+article. It captures the key events of the ValuJet 592 crash and the systemic
+failures that led to the disaster.
+
+The essay clearly explains the distinctions between procedural, engineered,
+and system accidents, emphasizing that the ValuJet crash was a system
+accident. It also includes the role of the NTSB investigation, the mishandling
+of oxygen generators, and the broader implications of complex systems.
+
+The essay references specific examples from the article, including the role
+of SabreTech, the FAA's oversight failures, and the concept of "normal
+accidents" from Charles Perrow.
+
+The writing is well-organized and flows logically. The explanation of
+technical and organizational failures is clear and accessible.
+
+The essay goes beyond summarizing by engaging with the article's broader
+themes, such as the inevitability of accidents in complex systems and the
+dangers of distributed responsibility.
+
+CRITICAL THINKING:
+The essay draws strong and meaningful parallels between the ValuJet disaster
+and software engineering, particularly in the context of complexity,
+distributed responsibility, and systemic failure.
+
+The discussion of "normalization of deviance" in software development is
+particularly compelling. The essay effectively connects this concept to
+common industry practices like skipping tests, ignoring bugs, and rushing
+code.
+
+The essay integrates key software engineering principles such as testing,
+documentation, redundancy, peer review, and ethical responsibility. It also
+discusses the trade-offs between complexity and manageability.
+
+The proposed solutions ~ like failover systems, automated rollbacks, and
+cross-training ~ are practical and grounded in real-world software
+engineering practices.
+
+The section is well-structured, with clear transitions and a logical
+progression of ideas. The writing is articulate and professional.
+
+Overall: The application to software engineering is insightful, relevant,
+and well-developed, showing a mature understanding of both the article's
+themes and their implications for software development.
+
+OVERALL ASSESSMENT:
+   Category                          Points
+   Summary of article                  25
+   Relation to S/W engineering         25
+   Thoughts/opinions presented         25
+   Spelling/Grammar                    25
+                                     -----
+   Subtotal                           100
+   ------------------------------------------------------
+   Total Percentage:   100 out of 100 which is an A-plus
+
+Overall: The application to software engineering is insightful, relevant,
+and well-developed, showing a mature understanding of both the article's
+themes and their implications for software development.  It seems to be a
+highly effective and thoughtful response to the assignment which
+demonstrates a strong grasp of the source material and applies its lessons
+to software engineering in a nuanced and practical way.
+
+Strengths:
+Deep understanding of system accidents and their relevance to engineering.
+Excellent use of analogies and real-world parallels.
+Clear articulation of ethical and technical responsibilities in software
+   development.
+Practical and well-reasoned recommendations for improving software
+   reliability.
+
+Suggestions for Improvement:
+Minor grammatical refinements could enhance readability.
+Including a brief real-world software failure case (e.g., Knight Capital,
+   Ariane 5, or Boeing 737 MAX software issues) could further strengthen the
+   application.
+
