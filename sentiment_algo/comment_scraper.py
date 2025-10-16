@@ -42,19 +42,20 @@ COMMENT_FETCH_LIMIT = 1000
 
 # --- Data Collection ---
 collected_comments = []
+banned_list = ['AI', 'FOR', 'IT', 'GF', 'OP', 'YOU', 'WAY']
 subreddit = reddit.subreddit(subreddit_name)
 print(f"\n🔥 Fetching the latest {COMMENT_FETCH_LIMIT} comments from r/{subreddit_name}...")
 
-ticker_regex = re.compile(r'\$[A-Z]{1,5}\b|\b[A-Z]{2,5}\b')
-yester_day = time.time() - (24 * 60)
+ticker_regex = re.compile(r'(?<!\b[A-Z]{2}\s)(?<!\b[A-Z]{3}\s)(?<!\b[A-Z]{4}\s)(?<!\b[A-Z]{5}\s)(\b(?:\$[A-Z]{1,5}|[A-Z]{2,5})\b)(?!\s[A-Z]{2,}\b)')
+yester_day = time.time() - (24 * 60*100000)
 
 for comment in subreddit.comments(limit=COMMENT_FETCH_LIMIT):
     if comment.created_utc > yester_day:
-        potential_tickers = ticker_regex.findall(comment.body)
+        potential_tickers = ticker_regex.findall(comment.body)       
         mentioned_stocks = set()
         for ticker in potential_tickers:
             clean_ticker = ticker.replace('$', '')
-            if clean_ticker in NASDAQ_SYMBOLS:
+            if clean_ticker in NASDAQ_SYMBOLS and clean_ticker not in banned_list:
                 mentioned_stocks.add(clean_ticker)
         
         if mentioned_stocks:
