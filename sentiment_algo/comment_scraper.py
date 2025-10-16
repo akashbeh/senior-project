@@ -46,7 +46,7 @@ subreddit = reddit.subreddit(subreddit_name)
 print(f"\n🔥 Fetching the latest {COMMENT_FETCH_LIMIT} comments from r/{subreddit_name}...")
 
 ticker_regex = re.compile(r'\$[A-Z]{1,5}\b|\b[A-Z]{2,5}\b')
-yester_day = time.time() - (24 * 60 * 60)
+yester_day = time.time() - (24 * 60)
 
 for comment in subreddit.comments(limit=COMMENT_FETCH_LIMIT):
     if comment.created_utc > yester_day:
