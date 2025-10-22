@@ -1,14 +1,16 @@
 import pandas as pd
 import numpy as np
 import os
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from fpdf import FPDF
 import ollama 
 import matplotlib.pyplot as plt
 import io 
+import glob
 
 # --- Configuration ---
-SIGNALS_FILE_PATH = f"/daily_signals/{date.today().strftime('%y-%m-%d')}_signals.csv"
+# SIGNALS_FILE_PATH = f"/daily_signals/{date.today().strftime('%y-%m-%d')}_signals.csv"
+SIGNALS_DIR = 'daily_signals'
 WEEKLY_SUMMARY_DIR = "weekly-summaries"
 HISTORICAL_PDF_FILE = "historical-weekly-change.pdf"
 
@@ -183,13 +185,35 @@ def generate_historical_report(df):
 
 # --- Main Execution ---
 if __name__ == "__main__":
-    try:
-        main_df = pd.read_csv(SIGNALS_FILE_PATH, parse_dates=['timestamp'])
-        print(f"Successfully loaded {SIGNALS_FILE_PATH}")
-    except FileNotFoundError:
-        print(f"Error: The main signals file '{SIGNALS_FILE_PATH}' was not found.")
-        exit()
+    # try:
+    #     main_df = pd.read_csv(SIGNALS_FILE_PATH, parse_dates=['timestamp'])
+    #     print(f"Successfully loaded {SIGNALS_FILE_PATH}")
+    # except FileNotFoundError:
+    #     print(f"Error: The main signals file '{SIGNALS_FILE_PATH}' was not found.")
+    #     exit()
         
-    generate_weekly_summary(main_df)
-    generate_historical_report(main_df)
+    # generate_weekly_summary(main_df)
+    # generate_historical_report(main_df)
+    # print("\nAll reports generated successfully.")
+    list_of_files = glob.glob(os.path.join(SIGNALS_DIR, '*_signals.csv')) # Use underscore
+    if not list_of_files:
+        print(f"Error: No signal files found in the '{SIGNALS_DIR}' directory.")
+        exit()
+
+    latest_file = max(list_of_files, key=os.path.getctime)
+    print(f"Using the latest signals file: {latest_file}")
+
+    try:
+        main_df = pd.read_csv(latest_file)
+        main_df['timestamp'] = pd.to_datetime(main_df['timestamp'])
+        print(f"Successfully loaded {latest_file}")
+    except FileNotFoundError:
+        print(f"Error: The latest signals file '{latest_file}' could not be loaded.")
+        exit()
+    except Exception as e:
+        print(f"Error loading or parsing {latest_file}: {e}")
+        exit()
+
+    generate_weekly_summary(main_df.copy()) 
+    generate_historical_report(main_df.copy())
     print("\nAll reports generated successfully.")
