@@ -1,0 +1,12 @@
+yfinance
+praw
+pandas
+numpy>2
+pysentimiento
+torch
+fpdf2
+matplotlib
+requests
+ollama
+tabulate
+scikit-learn

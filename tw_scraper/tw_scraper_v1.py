@@ -1,83 +1,110 @@
 import requests
+import pandas as pd
 import time
 import re
 from typing import List, Dict
+import json
+import os
+from datetime import date, timedelta
 
+# --- Configuration ---
+# PASTE YOUR API KEY FROM (api.twitterapi.io) HERE
+API_KEY = "new1_100efdfda2834c94b8e7f622c9d73456"
+
+# List of high-profile/trustworthy sources
+TRUSTED_SOURCES = [
+    "CNBC", "Bloomberg", "Reuters", "FinancialTimes", "WSJ",
+    "MarketWatch", "Stocktwits", "jimcramer", "elonmusk"
+]
+
+# Output folder for daily, date-stamped CSVs
+OUTPUT_DIR = "daily-tweets"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Banned word list (from your comment_scraper.py)
+BANNED_LIST = {'AI', 'FOR', 'IT', 'GF', 'OP', 'YOU', 'WAY'}
+
+# --- Function to get NASDAQ symbols (from your comment_scraper.py) ---
+def get_nasdaq_symbols_from_local_file():
+    """
+    Reads the locally saved 'nasdaq_screener.csv' file and returns a
+    clean list of symbols.
+    """
+    screener_file = 'nasdaq_screener.csv'
+    # Use os.path.dirname(__file__) to get the script's directory
+    # Then go '..' (up) one level to find the CSV
+    screener_path = os.path.join(os.path.dirname(__file__), '..', screener_file)
+    try:
+        df = pd.read_csv(screener_path)
+        ticker_column = 'Symbol'
+        if ticker_column in df.columns:
+            all_symbols = set(df[ticker_column].dropna().unique())
+            # Filter out banned tickers AND any symbols with special chars like '^'
+            valid_symbols = {s for s in all_symbols if s not in BANNED_LIST and s.isalpha()}
+            return list(valid_symbols) # Return as a list for chunking
+        else:
+            print(f"Error: Could not find '{ticker_column}' column in {screener_file}.")
+            return []
+    except FileNotFoundError:
+        print(f"Error: '{screener_path}' not found.")
+        return []
+
+# --- Helper function to split the list into chunks ---
+def chunk_list(data, chunk_size):
+    """Yield successive n-sized chunks from a list."""
+    for i in range(0, len(data), chunk_size):
+        yield data[i:i + chunk_size]
+
+# --- Original fetch_all_tweets function from your script ---
 def fetch_all_tweets(query: str, api_key: str) -> List[Dict]:
     """
     Fetches all tweets matching the given query from Twitter API, handling deduplication.
-
-    Args:
-        query (str): The search query for tweets
-        api_key (str): Twitter API key for authentication
-
-    Returns:
-        List[Dict]: List of unique tweets matching the query
-
-    Notes:
-        - Handles pagination using cursor and max_id parameters
-        - Deduplicates tweets based on tweet ID to handle max_id overlap
-        - Implements rate limiting handling
-        - Continues fetching beyond Twitter's initial 800-1200 tweet limit
-        - Includes error handling for API failures
+    (This function is from your tw_scraper_v1.py)
     """
     base_url = "https://api.twitterapi.io/twitter/tweet/advanced_search"
     headers = {"x-api-key": api_key}
     all_tweets = []
-    seen_tweet_ids = set()  # Set to track unique tweet IDs
+    seen_tweet_ids = set()
     cursor = None
     last_min_id = None
     max_retries = 3
 
     while True:
-        # Prepare query parameters
-        params = {
-            "query": query,
-            "queryType": "Latest"
-        }
-
-        # Add cursor if available (for regular pagination)
+        params = {"query": query, "queryType": "Latest"}
         if cursor:
             params["cursor"] = cursor
         elif last_min_id:
-            # Add max_id if available (for fetching beyond initial limit)
             params["query"] = f"{query} max_id:{last_min_id}"
 
         retry_count = 0
+        response = None # Define response here to check in finally
+        
         while retry_count < max_retries:
             try:
-                # Make API request
                 response = requests.get(base_url, headers=headers, params=params)
-                response.raise_for_status()  # Raise exception for bad status codes
+                response.raise_for_status()
                 data = response.json()
 
-                # Extract tweets and metadata
                 tweets = data.get("tweets", [])
                 has_next_page = data.get("has_next_page", False)
                 cursor = data.get("next_cursor", None)
 
-                # Filter out duplicate tweets
                 new_tweets = [tweet for tweet in tweets if tweet.get("id") not in seen_tweet_ids]
                 
-                # Add new tweet IDs to the set and tweets to the collection
                 for tweet in new_tweets:
                     seen_tweet_ids.add(tweet.get("id"))
                     all_tweets.append(tweet)
 
-                # If no new tweets and no next page, break the loop
                 if not new_tweets and not has_next_page:
                     return all_tweets
 
-                # Update last_min_id from the last tweet if available
                 if new_tweets:
                     last_min_id = new_tweets[-1].get("id")
 
-                # If no next page but we have new tweets, try with max_id
                 if not has_next_page and new_tweets:
-                    cursor = None  # Reset cursor for max_id pagination
+                    cursor = None
                     break
 
-                # If has next page, continue with cursor
                 if has_next_page:
                     break
 
@@ -87,60 +114,82 @@ def fetch_all_tweets(query: str, api_key: str) -> List[Dict]:
                     print(f"Failed to fetch tweets after {max_retries} attempts: {str(e)}")
                     return all_tweets
 
-                # Handle rate limiting
                 if hasattr(response, 'status_code') and response.status_code == 429:
-                    #For users in the free trial period, the QPS is very low—only one API request can be made every 5 seconds. Once you complete the recharge, the QPS limit will be increased to 20.
-                    print("Rate limit reached. Waiting for 1 second...")
-                    time.sleep(1)  # Wait 1 second for rate limit reset
+                    print("Rate limit reached. Waiting for 5 seconds...")
+                    time.sleep(5) # Wait 5 seconds for this API's rate limit
                 else:
                     print(f"Error occurred: {str(e)}. Retrying {retry_count}/{max_retries}")
-                    time.sleep(2 ** retry_count)  # Exponential backoff
+                    time.sleep(2 ** retry_count)
 
-        # If no more pages and no new tweets with max_id, we're done
         if not has_next_page and not new_tweets:
             break
-
+            
     return all_tweets
 
-# Example usage
-if __name__ == "__main__":
-    api_key = "new1_100efdfda2834c94b8e7f622c9d73456"
-
-    # Get input from the user
-    keywords = input("Enter the keywords you want to search for: ").strip()
-    user = input("Enter user you want to search for (or leave blank): ").strip()
-    since_date = input("Enter your query start date (YYYY-MM-DD, optional): ").strip()
-    until_date = input("Enter your query end date (YYYY-MM-DD, optional): ").strip()
-
-    # Build the query string
-    query_parts = []
-    if keywords:
-        query_parts.append(keywords)
-    if user:
-        query_parts.append(f"from:{user}")
-    if since_date:
-        query_parts.append(f"since:{since_date}")
-    if until_date:
-        query_parts.append(f"until:{until_date}")
-
-    query = " ".join(query_parts) + "-grok"
+# --- Main execution logic ---
+def run_daily_scrape():
+    """Fetches tweets for all tickers from trusted sources."""
     
-    # Save file
-    import json
-    def safe_filename(query: str) -> str:
-        return re.sub(r'[^a-zA-Z0-9_-]+', '_', query)[:50] 
+    tickers = get_nasdaq_symbols_from_local_file()
+    if not tickers:
+        print("No tickers loaded, stopping scraper.")
+        return
+    
+    # Define query constants
+    sources_query = " OR ".join([f"from:{source}" for source in TRUSTED_SOURCES])
+    since_date = (date.today() - timedelta(days=1)).strftime('%Y-%m-%d')
+    
+    # Chunk tickers to keep queries manageable
+    ticker_chunks = list(chunk_list(tickers, 30))
+    master_tweet_list = []
+    
+    print(f"🔥 Starting tweet collection for {len(tickers)} tickers across {len(ticker_chunks)} chunks...")
 
-    #filename built 
-    filename = f"{safe_filename(query)}.json"
+    for i, chunk in enumerate(ticker_chunks):
+        print(f"\n--- Processing Chunk {i+1}/{len(ticker_chunks)} ---")
+        
+        tickers_query = " OR ".join(chunk)
+        # Build the final query for this chunk
+        query = f"({tickers_query}) ({sources_query}) since:{since_date}"
+        
+        print(f"Querying for: {query[:150]}...") # Print start of query
+        
+        chunk_tweets = fetch_all_tweets(query, API_KEY)
+        print(f"Fetched {len(chunk_tweets)} unique tweets for this chunk.")
+        
+        if chunk_tweets:
+            master_tweet_list.extend(chunk_tweets)
 
-    #fetch tweets
-    tweets = fetch_all_tweets(query, api_key)
-    print(f"Fetched {len(tweets)} unique tweets")
+    # --- Process and Save All Found Tweets ---
+    print(f"\n--- All chunks processed ---")
+    print(f"Fetched {len(master_tweet_list)} total unique tweets.")
+    
+    if master_tweet_list:
+        # Deduplicate one last time, just in case of overlap
+        final_seen_ids = set()
+        final_tweet_list = []
+        for tweet in master_tweet_list:
+            if tweet.get("id") not in final_seen_ids:
+                final_seen_ids.add(tweet.get("id"))
+                final_tweet_list.append(tweet)
 
-    #print and save file if tweets found. if not, nothing saved
-    if tweets:
-        with open(filename, "w", encoding="utf-8") as f:
-         json.dump(tweets, f, indent=2, ensure_ascii=False)
-        print(f"Saved tweets to {filename}")
+        print(f"Saving {len(final_tweet_list)} unique tweets...")
+        
+        # Convert to DataFrame for easier saving
+        df = pd.DataFrame(final_tweet_list)
+        
+        # Create daily, date-stamped filename
+        today_str = date.today().strftime('%y-%m-%d')
+        output_filename = f"{today_str}.csv"
+        output_path = os.path.join(OUTPUT_DIR, output_filename)
+        
+        df.to_csv(output_path, index=False, encoding='utf-8')
+        print(f"💾 Data saved to: {output_path}")
     else:
         print("No tweets found — no file created.")
+
+if __name__ == "__main__":
+    if API_KEY == "PASTE_YOUR_NEW_KEY_FROM_api.twitterapi.io_HERE":
+        print("Error: API_KEY not set. Please edit the script and add your api.twitterapi.io key.")
+    else:
+        run_daily_scrape()
