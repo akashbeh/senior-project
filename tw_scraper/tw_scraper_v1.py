@@ -8,7 +8,6 @@ import os
 from datetime import date, timedelta
 
 # --- Configuration ---
-# PASTE YOUR API KEY FROM (api.twitterapi.io) HERE
 API_KEY = "new1_100efdfda2834c94b8e7f622c9d73456"
 
 # List of high-profile/trustworthy sources
@@ -31,15 +30,12 @@ def get_nasdaq_symbols_from_local_file():
     clean list of symbols.
     """
     screener_file = 'nasdaq_screener.csv'
-    # Use os.path.dirname(__file__) to get the script's directory
-    # Then go '..' (up) one level to find the CSV
     screener_path = os.path.join(os.path.dirname(__file__), '..', screener_file)
     try:
         df = pd.read_csv(screener_path)
         ticker_column = 'Symbol'
         if ticker_column in df.columns:
             all_symbols = set(df[ticker_column].dropna().unique())
-            # Filter out banned tickers AND any symbols with special chars like '^'
             valid_symbols = {s for s in all_symbols if s not in BANNED_LIST and s.isalpha()}
             return list(valid_symbols) # Return as a list for chunking
         else:
@@ -49,7 +45,6 @@ def get_nasdaq_symbols_from_local_file():
         print(f"Error: '{screener_path}' not found.")
         return []
 
-# --- Helper function to split the list into chunks ---
 def chunk_list(data, chunk_size):
     """Yield successive n-sized chunks from a list."""
     for i in range(0, len(data), chunk_size):
@@ -116,7 +111,7 @@ def fetch_all_tweets(query: str, api_key: str) -> List[Dict]:
 
                 if hasattr(response, 'status_code') and response.status_code == 429:
                     print("Rate limit reached. Waiting for 5 seconds...")
-                    time.sleep(5) # Wait 5 seconds for this API's rate limit
+                    time.sleep(5) 
                 else:
                     print(f"Error occurred: {str(e)}. Retrying {retry_count}/{max_retries}")
                     time.sleep(2 ** retry_count)
