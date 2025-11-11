@@ -35,7 +35,7 @@ def get_nasdaq_symbols_from_local_file():
     clean list of symbols.
     """
     screener_file = 'nasdaq_screener.csv'
-    screener_path = os.path.join(os.path.dirname(__file__), '..', screener_file)
+    screener_path = os.path.join(os.path.dirname(__file__), '..', 'data', screener_file)
     try:
         df = pd.read_csv(screener_path)
         ticker_column = 'Symbol'

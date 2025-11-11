@@ -63,6 +63,6 @@ print("📈 Overall SVC Calculation Complete.")
 
 # --- Save Master Signal File ---
 today_str = date.today().strftime('%y-%m-%d')
-output_path = os.path.join(OUTPUT_DIR, f"{today_str}.csv")
+output_path = os.path.join(OUTPUT_DIR, f"{today_str}_signals.csv")
 df_svc.to_csv(output_path)
 print(f"\n💾 Complete historical SVC signal data saved to: {output_path}")

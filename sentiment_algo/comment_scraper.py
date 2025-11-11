@@ -6,10 +6,11 @@ import re
 from datetime import date
 
 # --- Function to get NASDAQ symbols from local file ---
+screener_file = 'nasdaq_screener.csv'
+screener_path = os.path.join(os.path.dirname(__file__), '..', 'data', screener_file)
 def get_nasdaq_symbols_from_local_file():
-    screener_file = 'nasdaq_screener.csv'
     try:
-        df = pd.read_csv(screener_file)
+        df = pd.read_csv(screener_path)
         ticker_column = 'Symbol'
         if ticker_column in df.columns:
             return set(df[ticker_column].dropna().unique())

@@ -8,10 +8,11 @@ def get_nasdaq_symbols_from_local_file():
     Reads the locally saved 'nasdaq_screener.csv' file and returns a
     clean list of symbols.
     """
-    screener_file = os.path.join(os.path.dirname(__file__), '..', 'nasdaq_screener.csv')
+    screener_file = 'nasdaq_screener.csv'
+    screener_path = os.path.join(os.path.dirname(__file__), '..', 'data', screener_file)
     
     try:
-        df = pd.read_csv(screener_file)
+        df = pd.read_csv(screener_path)
         ticker_column = 'Symbol'
         if ticker_column in df.columns:
             symbols = df[ticker_column].dropna().unique().tolist()
