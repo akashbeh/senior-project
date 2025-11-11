@@ -17,7 +17,12 @@ TRUSTED_SOURCES = [
 ]
 
 # Output folder for daily, date-stamped CSVs
-OUTPUT_DIR = "daily-tweets"
+SCRIPT_DIR = os.path.dirname(__file__)
+# os.path.join(SCRIPT_DIR, "..") goes up one level to the project root (.../senior-project)
+PROJECT_ROOT = os.path.join(SCRIPT_DIR, "..")
+
+# Save output to "sentiment_algo/daily-tweets" in the project root
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "sentiment_algo", "daily-tweets")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Banned word list (from your comment_scraper.py)
