@@ -44,11 +44,18 @@ if __name__ == "__main__":
             chunk = tickers[i:i + chunk_size]
             print(f"--- Downloading Batch {i//chunk_size + 1}/{(len(tickers)//chunk_size) + 1} ({len(chunk)} tickers) ---")
             
-            data = yf.download(chunk, period="max", interval="1d", auto_adjust=False, threads=False)
+            # --- CHANGE IS HERE ---
+            # We now specify a start date instead of "max"
+            data = yf.download(
+                chunk, 
+                start="2008-01-01", 
+                interval="1d", 
+                auto_adjust=False, 
+                threads=False
+            )
             
             if not data.empty:
                 price_cols = ['Adj Close', 'Close', 'High', 'Low', 'Open', 'Volume']
-                # Filter data to only include valid columns
                 data = data.loc[:, data.columns.get_level_values(0).isin(price_cols)]
                 all_data_frames.append(data)
             
@@ -63,7 +70,7 @@ if __name__ == "__main__":
         full_data = pd.concat(all_data_frames, axis=1)
         
         print("Processing data...")
-    
+        
         data_long = full_data.stack(future_stack=True).reset_index()
         
         data_long.rename(columns={'level_1': 'ticker', 'Date': 'date'}, inplace=True)
@@ -75,6 +82,7 @@ if __name__ == "__main__":
                 
         data_long = data_long[expected_cols]
         
+        # Saves the file inside the 'sentiment_algo' folder
         output_file = os.path.join(os.path.dirname(__file__), 'historical_prices.csv')
         
         data_long.to_csv(output_file, index=False)
