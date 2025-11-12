@@ -8,5 +8,8 @@ fpdf2
 matplotlib
 requests
 ollama
-tabulate
 scikit-learn
+langchain
+langchain-community
+langchain-experimental
+tabulate
