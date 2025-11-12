@@ -2,26 +2,30 @@ import pandas as pd
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.model_selection import train_test_split, GridSearchCV, learning_curve
 import os
-import numpy as np
-from datetime import date
-
+import glob
+from datetime import datetime
 
 print("Starting SVM multiclass model training script...")
 
-# --- Define Thresholds ---
-# We need to define what counts as a "Buy", "Sell", or "Hold".
-# These are percentages (e.g., 0.02 = 2%). You can tune these.
-HOLD_THRESHOLD = 0.02  # Any move between -2% and +2% is a "Hold"
-# Any move > +2% is a "Buy"
-# Any move < -2% is a "Sell"
 
-# --- 1. Load Datasets ---
-today_str = date.today().strftime('%y-%m-%d')
+HOLD_THRESHOLD = 0.02  # Any move between -2% and +2% is a "Hold"
 SCRIPT_DIR = os.path.dirname(__file__)
 PRICE_FILE = os.path.join(SCRIPT_DIR, 'historical_prices.csv')
-SENTIMENT_FILE = os.path.join(SCRIPT_DIR, '..', 'sentiment_algo', 'daily_signals', f'{today_str}_signals.csv')
+SIGNALS_DIR = os.path.join(SCRIPT_DIR, 'daily_signals')
+
+list_of_files = glob.glob(os.path.join(SIGNALS_DIR, '??-??-??_signals.csv')) # Use YY-MM-DD format
+if not list_of_files:
+    print(f"Error: No signal files found in '{SIGNALS_DIR}' matching 'YY-MM-DD_signals.csv'.")
+    exit()
+
+def get_date_from_filename(f):
+    basename = os.path.basename(f)
+    date_str = basename.split('_signals.csv')[0]
+    return datetime.strptime(date_str, '%y-%m-%d') # Use %y-%m-%d format
+
+latest_file = max(list_of_files, key=get_date_from_filename)
+print(f"Loading latest signals file: {latest_file}")
 
 try:
     prices_df = pd.read_csv(PRICE_FILE, parse_dates=['date'])
@@ -31,13 +35,16 @@ except FileNotFoundError:
     exit()
 
 try:
-    sentiment_df = pd.read_csv(SENTIMENT_FILE, parse_dates=['timestamp'])
-    print(f"Successfully loaded {SENTIMENT_FILE}")
+    sentiment_df = pd.read_csv(latest_file, parse_dates=['timestamp'])
+    print(f"Successfully loaded {latest_file}")
 except FileNotFoundError:
-    print(f"Error: '{SENTIMENT_FILE}' not found. Please run your pipeline first.")
+    print(f"Error: '{latest_file}' not found. Please run your pipeline first.")
     exit()
 
-# --- 2. Feature Engineering (Historical Prices) ---
+if 'Ticker' in prices_df.columns:
+    prices_df.rename(columns={'Ticker': 'ticker'}, inplace=True)
+
+
 print("Engineering price features...")
 prices_df.sort_values(by=['ticker', 'date'], inplace=True)
 
@@ -47,13 +54,10 @@ periods = {
 }
 
 for name, period in periods.items():
-    prices_df[name] = prices_df.groupby('ticker')['Adj Close'].pct_change(periods=period)
+    prices_df[name] = prices_df.groupby('ticker')['Adj Close'].pct_change(periods=period, fill_method=None)
 
-# --- 3. Feature Engineering (NEW Target Variable 'y') ---
-# Calculate the *percentage change* for the next day.
-prices_df['next_day_pct_change'] = prices_df.groupby('ticker')['Adj Close'].pct_change(periods=-1).shift(1)
+prices_df['next_day_pct_change'] = prices_df.groupby('ticker')['Adj Close'].pct_change(periods=-1, fill_method=None).shift(1)
 
-# Define the 3-class target variable
 def create_target(pct_change):
     if pct_change > HOLD_THRESHOLD:
         return 1  # Buy
@@ -63,19 +67,23 @@ def create_target(pct_change):
         return 0  # Hold
 
 prices_df['target'] = prices_df['next_day_pct_change'].apply(create_target)
-
-# --- 4. Combine Data ---
 print("Merging sentiment and price data...")
 sentiment_df.rename(columns={'timestamp': 'date'}, inplace=True)
 
-data = pd.concat(
+prices_df['ticker'] = prices_df['ticker'].astype(str)
+sentiment_df['ticker'] = sentiment_df['ticker'].astype(str)
+
+data = pd.merge(
     prices_df, 
     sentiment_df, 
     on=['ticker', 'date'], 
     how='inner'
 )
 
-# --- 5. Build and Train Model ---
+agent_data_path = os.path.join(SCRIPT_DIR, 'full_merged_data.csv')
+data.to_csv(agent_data_path, index=False)
+print(f"✅ Agent data file saved to: {agent_data_path}")
+
 data.dropna(inplace=True)
 
 if data.empty:
@@ -93,14 +101,12 @@ feature_cols = [
 X = data[feature_cols]
 y = data['target']
 
-# Check class distribution
 print("\nClass Distribution in dataset:")
 print(y.value_counts(normalize=True) * 100)
 
-# Time-Series Train/Test Split (80% train, 20% test)
 split_index = int(len(X) * 0.8)
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, y_train = X.iloc[:split_index], y.iloc[:split_index]
+X_test, y_test = X.iloc[split_index:], y.iloc[split_index:]
 
 print(f"\nTraining on {len(X_train)} samples, testing on {len(X_test)} samples.")
 
@@ -108,33 +114,26 @@ if X_train.empty or X_test.empty:
      print("Error: Not enough data for train/test split.")
      exit()
 
-# Scale the features
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-# Initialize SVM for multiclass classification
 print("Training SVM model with RBF kernel...")
-# SVC automatically handles multiclass classification using a "one-vs-one" strategy
 model = SVC(kernel='rbf', C=1.0, gamma='auto')
-
-# Fit the model
 model.fit(X_train_scaled, y_train)
 print("Model training complete.")
 
-# --- 6. Evaluate Model ---
-y_pred = model.predict(X_test_scaled)
 
+y_pred = model.predict(X_test_scaled)
 print("\n" + "="*30)
 print("   Model Evaluation Results")
 print("="*30)
 print(f"Accuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%")
 print("\nClassification Report:")
-# NEW: Updated target_names for the 3 classes
 print(classification_report(
     y_test, 
     y_pred, 
     target_names=['Sell (-1)', 'Hold (0)', 'Buy (1)'],
-    zero_division_zero=True
+    zero_division=0
 ))
 print("="*30)
