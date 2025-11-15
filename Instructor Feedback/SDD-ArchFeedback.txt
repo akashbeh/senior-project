@@ -1,0 +1,104 @@
+
+Documentation Feedback ~ Deliverable #4
+Software Design Document ~ Architecture
+CMSI 4071 Fall 2025
+=======================================
+
+INTRODUCTION SECTION:
+   System objectives section
+   Hardware, software, and human interfaces section
+      This section is fine.
+
+ARCHITECTURAL DESIGN SECTION:
+   Strengths
+      Clear modular architecture: The system is organized into five layers
+         (Data Collection, Analysis, Cross-Referencing, Recommendation,
+         Reporting), which promotes scalability and maintainability.
+      Purpose-driven separation: Each layer has a distinct responsibility,
+         reducing coupling and improving clarity.
+      Alignment with objectives: The architecture supports the main goals
+         (data scraping, sentiment analysis, correlation, reporting).
+   Suggestions
+      Add rationale for architectural style: Explicitly state whether this
+         design follows a layered architecture pattern and why it was chosen
+         (e.g., for separation of concerns, testability).
+      Include non-functional considerations: Briefly address performance,
+         security, and extensibility (e.g., handling large datasets, API
+         rate limits).
+      Clarify data flow between layers: While the layers are listed, a short
+         description of how data transitions between them would improve
+         completeness.
+
+   Major softwre components section
+      Strengths
+         Comprehensive component list: Covers all major subsystems (Data
+            Collection, Sentiment Analysis, Cross-Referencing,
+            Recommendation Engine, Report Generation).
+         Inputs and outputs specified: Each component includes what it
+            consumes and produces, which is excellent for traceability.
+         Responsibilities clearly defined: Each component’s role is
+            described in functional terms.
+      Suggestions
+         Add mapping to functional requirements: Include explicit references
+            to SRS requirements (e.g., FR 5.2.x) for compliance.
+         Clarify component boundaries: For example, does the Data Collection
+            component handle error recovery or is that delegated elsewhere?
+         Include scalability notes: Indicate how components will handle
+            future phases (e.g., political trade data integration).
+
+   Major software interactions section
+      Strengths
+         Sequential data flow described:
+            The pipeline from Reddit API -> Data Collection -> Sentiment
+               Analysis -> Cross-Referencing -> Recommendation -> Reporting
+               is clear.
+         External interactions noted: Mentions Reddit API and stock market
+            APIs, which is important for integration.
+      Suggestions
+         Add interaction diagrams: A sequence diagram or flowchart would
+            make this section stronger.
+         Clarify error handling and edge cases: For example, what happens
+            if Reddit API fails or returns incomplete data?
+         Include data exchange details: Specify formats (e.g., JSON, CSV)
+            and protocols (HTTP, HTTPS) for external interactions.
+
+   Architectural design diagrams section
+      Strengths
+         Diagram placeholder included: Indicates awareness of the need for
+            visual representation.
+      Suggestions
+         Provide actual diagrams: Include:
+            Component diagram showing relationships between modules.
+            Data flow diagram illustrating how data moves through layers.
+            Add labels and legends: Ensure diagrams clearly indicate
+               components, interactions, and data flow directions.
+         Verify alignment with text: Diagrams should match the descriptions
+            in 6.2 and 6.2.2.
+
+
+OVERALL ASSESSMENT:
+   Category                          Points
+   INTRODUCTION                         1
+   System objectives                    1
+   H/W, S/W, Human I/F                  1
+
+   ARCHITECTURAL DESIGN SECTION:
+   Major softwre components             1
+   Major software interactions          1
+   Architectural design diagrams        0
+
+                                     ======
+   Subtotal                             5
+   ------------------------------------------------------
+   Total Percentage:  5/10 = 50%
+
+
+Overall Completeness Assessment
+   The document is strong at the architectural level but needs enhancements
+   for full compliance with SDD standards. It:
+      Defines major components and their responsibilities.
+      Explains interactions and includes a placeholder for diagrams.
+      Uses a layered architecture that supports modularity.
+   However, it lacks explicit requirement mapping, detailed rationale for
+      design choices, and actual diagrams, which are essential for completeness.
+
