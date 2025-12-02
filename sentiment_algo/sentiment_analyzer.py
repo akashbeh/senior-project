@@ -17,7 +17,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 BANNED_LIST = {'AI', 'FOR', 'IT', 'GF', 'OP', 'YOU', 'WAY'}
 
 def get_nasdaq_symbols_from_local_file():
-    screener_path = os.path.join(PROJECT_ROOT, 'nasdaq_screener.csv')
+    screener_path = os.path.join(PROJECT_ROOT, 'data', 'nasdaq_screener.csv')
     try:
         df = pd.read_csv(screener_path)
         ticker_column = 'Symbol'

@@ -5,17 +5,12 @@ venv/
 # API Credentials - VERY IMPORTANT
 praw.ini
 
-# Generated Data Folders
-daily_comments/
-daily_sentiment/
-daily_signals/
-
 # Log files
 *.log
 
 # Local Data Files
 *.csv
-*.txt
+
 
 # Python cache
 __pycache__/
