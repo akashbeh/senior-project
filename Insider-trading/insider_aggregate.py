@@ -1,6 +1,7 @@
 import pandas as pd
 from pandas import *
 from edgar import *
+# get all insider transactions data from a given date range and save to a csv file
 
 set_identity("sgunawa7@lion.lmu.edu")
 filings =  get_filings(form="4", filing_date='2025-11-09:2025-11-11')

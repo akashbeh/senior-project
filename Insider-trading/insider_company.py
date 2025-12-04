@@ -7,9 +7,9 @@ from edgar.entity import EntityFilings
 from edgar.ownership import Form4
 from datetime import datetime, timedelta
 
+# Find insiders who have transacted the comany stock in the last 6 months
 
 # Calculate the date 6 months ago from today
-
 date_range = ((datetime.now() - timedelta(days=6*30)) # Approximate 6 months
               .strftime('%Y-%m-%d:'))
 
@@ -34,5 +34,7 @@ def get_insiders(ticker):
     return insiders
 
 if __name__ == '__main__':
-    insiders = get_insiders("NFLX")
+    ticker = "NVDA"
+    insiders = get_insiders(ticker)
+    insiders.to_csv(f"{ticker}_insiders.csv", index=False)
     print(insiders)

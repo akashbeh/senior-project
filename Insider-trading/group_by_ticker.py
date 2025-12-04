@@ -2,24 +2,27 @@ import pandas as pd
 from pandas import * 
 from edgar import *
 
-OUTPUT = 'transactions_by_ticker.csv'
+OUTPUT = 'transactions_by_ticker4.csv'
 
 set_identity("sgunawa7@lion.lmu.edu")
 
-filings = get_filings(form="4", filing_date='2025-11-01:')
+filings = get_filings(form="4", filing_date='2025-07-01:2025-11-29')
 
-exclude_cols = [
-    'Exercise Count', 'Exercise Shares', 'Derivative_Sale Count', 'Derivative_Sale Shares',
-    'Award Count', 'Award Shares', 'Gift Count', 'Gift Shares', 'Derivative_Purchase Count',
-    'Derivative_Purchase Shares', 'Other_Acquisition Count', 'Other_Acquisition Shares',
-    'Other_Disposition Count', 'Other_Disposition Shares', 'Tax Count', 'Tax Shares'
-]
+print("here1")
+dataframes = []
+for f in filings:
+    try:
+        obj = f.obj()
+        if obj is not None:
+            df = obj.to_dataframe()
+            dataframes.append(df)
+    except (AttributeError, KeyError, Exception) as e:
+        print(f"Skipping filing {f.accession_no} due to parsing error: {type(e).__name__}")
+        continue
 
-transaction = pd.concat([
-    f.obj()
-     .to_dataframe()
-    for f in filings
-], ignore_index=True, sort=False)
+transaction = pd.concat(dataframes, ignore_index=True, sort=False) if dataframes else pd.DataFrame()
+
+print("here2")
 
 # Filter for Purchase and Sale transactions
 filtered = transaction[transaction['Transaction Type'].isin(['Purchase', 'Sale'])]
