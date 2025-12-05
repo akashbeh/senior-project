@@ -207,3 +207,7 @@ Format: in-memory Pandas DataFrame with cleaned text, tickers, timestamps
 #### 2.2.3.2 Data Flow / Component Diagram
 ![Component Data Flow Diagram](assets/sdd_diagram2.png)
 
+---
+
+#### 2.2.3.3 Local Deployment Diagram
+![Component Data Flow Diagram](assets/sdd_diagram3.png)
