@@ -61,31 +61,49 @@ set_identity("your@email")
 # 4. Directory Structure
 
 ```
-sas-project/
+# 4. Directory Structure
+
+sas-repository/
+│
+├── ABCDR Presentation/
+├── Assignments/
+├── Insider-trading/
+│   ├── Price_correlation.py
+│   ├── README.md
+│   ├── group_by_ticker.py
+│   ├── insider_aggregate.py
+│   ├── insider_company.py
+│   └── requirements.txt
+│
+├── Instructor Feedback/
+├── Poster/
+├── Project Proposal/
+├── SDL/
+├── Status Reports/
+│
+├── data/
+│   └── nasdaq_screener.csv
 │
 ├── sentiment_algo/
-│ ├── comment_scraper.py
-│ ├── sentiment_analyzer.py
-│ ├── aggregate_sentiment.py
-│ ├── generate_report.py
-│ ├── daily_comments/
-│ ├── daily_sentiment/
-│ ├── daily_signals/
-│ └── weekly-summaries/
+│   ├── weekly-summaries/
+│   ├── .gitignore
+│   ├── comment_scraper.py
+│   ├── download_price_history.py
+│   ├── generate_report.py
+│   ├── historical-weekly-change.pdf
+│   ├── randomForest.py
+│   ├── requirements.txt
+│   ├── run_pipeline.sh
+│   ├── sentiment_analyzer.py
+│   ├── signal_generator.py
+│   ├── svm_stock_classifier.py
+│   └── trading_strategies.py
 │
-├── download_price_history.py
-├── historical_prices.csv
+├── tw_scraper/
 │
-├── svm_stock_classifier.py
-├── randomForest.py
-├── trading_strategies.py
 │
-├── insider_aggregate.py
-├── insider_company.py
-├── Price_correlation.py
-│
-├── requirements.txt
-└── README.md
+└── features.txt
+
 
 
 ```
