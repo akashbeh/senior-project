@@ -119,8 +119,10 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-print("Training SVM model with RBF kernel...")
-model = SVC(kernel='rbf', C=1.0, gamma='auto')
+#print("Training SVM model with RBF kernel...")
+#model = SVC(kernel='rbf', C=1.0, gamma='auto')
+print("Training Random Forest Classifier...")
+model = RandomForestClassifier(n_estimators=500, random_state=42)
 model.fit(X_train_scaled, y_train)
 print("Model training complete.")
 
@@ -137,6 +139,18 @@ print(classification_report(
     target_names=['Super Sell(-2)', 'Sell (-1)', 'Hold (0)', 'Buy (1)', 'Super Buy(2)'],
     zero_division=0
 ))
+
+# --- Feature Importance (Specific to Random Forest) ---
+print("\n--- Feature Importance ---")
+importances = model.feature_importances_
+indices = np.argsort(importances)[::-1]
+
+print("Which features mattered most?")
+for i in range(len(feature_cols)):
+    print(f"{i+1}. {feature_cols[indices[i]]}: {importances[indices[i]]:.4f}")
+
+
+
 print("="*30)
 print("\n" + "="*60)
 print("-----------BACKTESTING WITH 100 AGAINST B&H--------------")
