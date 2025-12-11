@@ -1,0 +1,21 @@
+Data refinement
+
+Features:
+"Trade direction": Insider trades net/volume over day, week, month, 3 months, 6 months
+"Buyer change": (Over likewise periods) remaining value (remaining shares * price) / transaction (Reciprocal to prevent div by 0)
+
+STEPS:
+
+1. Manual refinement
+	1. If transaction type != code: delete
+	2. Delete transaction type
+	3. Delete Description (all the same as code)
+	4. Delete form, delete issuer, delete position, delete remarks. Do NOT delete insider or price
+	5. Delete if shares or value == 0
+	6. Delete before 2020
+2. Merge.py: combines all 2020 data
+3. Clean.py: builds features
+
+4. ../svm_full.py:
+- apply features to days in between
+- merge with the incomplete "full_merged_data.csv"
