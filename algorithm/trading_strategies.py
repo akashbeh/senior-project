@@ -1,176 +1,270 @@
 import pandas as pd
 import numpy as np
+import math
 
 # --- Strategy 1: The SVM Model's Predictions ---
 
 class Strategy:
-    def run(self, test_data):
-        raise Exception("Not defined")
-
-class Svm(Strategy):
-    def run(self, test_data):
+    def __init__(self):
+        self.daily_portfolio_values = list()
+    
+    # The default is to trade each stock individually with $100 allotted, but if not this can be changed
+    def run(self, model, feature_cols, scaler, test_data):
         """
-        Backtests the 10% buy/sell strategy based on the SVM model's signals.
+        Backtests the strategy based on the SVM model's signals.
         'test_data' must include 'ticker', 'date', 'change_day', and 'signal' (the y_pred).
         """
-        print("\n--- Running SVM Strategy Simulation ---")
+        self.model = model
+        self.feature_cols = feature_cols
+        self.scaler = scaler
+        
+        print(f"\n--- Running {self.name} Strategy Simulation ---")
+        test_data = test_data.sort_values('date')
+        #test_data["date"] = pd.to_datetime(test_data["date"])
+        #test_data = test_data.dropna(subset=["date"])
+        #if test_data.empty:
+        #    raise Exception("Empty set")
+
+        self.data = test_data
+        
+        self.tickers = self.data['ticker'].unique()
+        tickers_n = len(self.tickers)
+        
+        self.cashes = [100 for _ in range(tickers_n)]
+        self.stock_values = [0.0 for _ in range(tickers_n)]
+        
+        self.first_date = self.data.iloc[0]["date"]
+        self.last_date = self.data.iloc[-1]["date"]
+        
+        # Initialize share prices
+        self.share_prices = [0.0 for _ in range(tickers_n)]
+        price_per_ticker = (
+            test_data.sort_values("date")
+                .groupby("ticker")
+                .first()["Adj Close"]
+        )
+        for i, ticker in enumerate(self.tickers):
+            # get() can be None, but it's ok because it won't be used
+            self.share_prices[i] = price_per_ticker.get(ticker)
+        
+        # Run simulation
+        for day in pd.date_range(start=self.first_date, end=self.last_date):
+            rows = self.data.loc[self.data["date"] == day]
+            self.update_stocks(rows)
+            self.trade_day(rows)
+
+        return self.metrics()
+    
+    # Calculate metrics for this strategy
+    def metrics(self):
         results = []
         
-        for ticker in test_data['ticker'].unique():
-            ticker_df = test_data[test_data['ticker'] == ticker].sort_values('date')
-            if ticker_df.empty:
-                continue
-
-            cash = 100.0
-            stock_value = 0.0
-            daily_portfolio_values = [100.0]
-
-            for index, row in ticker_df.iterrows():
-                # 1. Update portfolio value based on the day's market move
-                daily_return = row['change_day']
-                stock_value *= (1 + daily_return)
-                daily_portfolio_values.append(cash + stock_value)
-
-                # 2. Make trade based on signal
-                signal = row['signal']
-                
-                if signal == 1: # Buy
-                    trade_amount = cash * 0.10
-                    cash -= trade_amount
-                    stock_value += trade_amount
-                elif signal == -1: # Sell
-                    trade_amount = stock_value * 0.10
-                    stock_value -= trade_amount
-                    cash += trade_amount
-                
-            # Calculate metrics for this ticker
-            final_value = cash + stock_value
-            total_return_pct = (final_value - 100) / 100
-            profit = final_value - 100
+        final_value = self.daily_portfolio_values[-1]
+        original_value = 100 * len(self.tickers)
+        total_return_pct = (final_value - original_value) / original_value
+        profit = final_value - original_value
             
-            daily_returns = pd.Series(daily_portfolio_values).pct_change().fillna(0)
-            risk_pct = daily_returns.std()
-            sharpe_ratio = (daily_returns.mean() / risk_pct) * np.sqrt(252) if risk_pct > 0 else 0
-            
-            results.append({
-                'ticker': ticker,
-                'strategy': 'SVM Model',
-                'final_value': final_value,
-                'profit': profit,
-                'total_return_pct': total_return_pct,
-                'risk_pct': risk_pct,
-                'sharpe_ratio': sharpe_ratio
-            })
-            
+        daily_returns = pd.Series(self.daily_portfolio_values).pct_change().fillna(0)
+        risk_pct = daily_returns.std()
+        sharpe_ratio = (daily_returns.mean() / risk_pct) * np.sqrt(252) if risk_pct > 0 else 0
+        
+        results.append({
+            'strategy': self.name,
+            'final_value': final_value,
+            'profit': profit,
+            'total_return_pct': total_return_pct,
+            'risk_pct': risk_pct,
+            'sharpe_ratio': sharpe_ratio
+        })
+        
         return pd.DataFrame(results)
+    
+    # Update stock values with changing share prices
+    def update_stocks(self, day_rows):
+        for i, ticker in enumerate(self.tickers):
+            ticker_rows = day_rows.loc[day_rows["ticker"] == ticker]
+            if len(ticker_rows) == 0:
+                continue
+            row = ticker_rows.iloc[0]
+            
+            old_stock_value = self.stock_values[i]
+            old_share_price = self.share_prices[i]
+            
+            # Shares = $ / ($ per share)
+            shares = old_stock_value / old_share_price
+            
+            new_share_price = row["Adj Close"]
+            new_stock_value = shares * new_share_price
+            
+            self.share_prices[i] = new_share_price
+            self.stock_values[i] = new_stock_value
+            
+        self.daily_portfolio_values.append(sum(self.stock_values) + sum(self.cashes))
+        
+    
+    def trade_day(self, rows):
+        for i, ticker in enumerate(self.tickers):
+            ticker_rows = rows.loc[rows["ticker"] == ticker]
+            if len(ticker_rows) == 0:
+                continue
+            row = ticker_rows.iloc[0]
+            
+            cash = self.cashes[i]
+            stock_value = self.stock_values[i]
+            
+            (cash, stock_value) = self.trade_stock(row, cash, stock_value)
+                
+            self.cashes[i] = cash
+            self.stock_values[i] = stock_value
 
+    
+    def trade_stock(self, row, cash, stock_value):
+        raise Exception("Not defined")
+
+
+# Make trade based on SVM signal
+class Svm(Strategy):
+    def __init__(self):
+        super().__init__()
+        self.super_bid = 0.20
+        self.small_bid = 0.10
+        self.name = "SVM Model"
+
+    def trade_stock(self, row, cash, stock_value):
+        signal = row["signal"]
+        
+        if signal == 0:
+            return (cash, stock_value)
+        
+        quantity = 0
+        if abs(signal) == 1:
+            quantity = self.small_bid
+        else:
+            quantity = self.super_bid
+        
+        if signal > 0:
+            # Buy
+            trade = cash * quantity
+            cash -= trade
+            stock_value += trade
+        else:
+            # Sell
+            trade = stock_value * quantity
+            stock_value -= trade
+            cash += trade
+            
+        return (cash, stock_value)
+    
 # --- Strategy 2: The "Buy and Hold" Benchmark ---
 
 class BuyAndHold(Strategy):
-    def run(self, test_data):
-        """
-        Backtests a simple Buy and Hold strategy for comparison.
-        'test_data' must include 'ticker', 'date', and 'change_day'.
-        """
-        print("--- Running Buy and Hold Simulation ---")
-        results = []
-        
-        for ticker in test_data['ticker'].unique():
-            ticker_df = test_data[test_data['ticker'] == ticker].sort_values('date')
-            if ticker_df.empty:
-                continue
-                
-            bnh_value = 100.0
-            daily_portfolio_values = [100.0]
-            
-            for index, row in ticker_df.iterrows():
-                daily_return = row['change_day']
-                bnh_value *= (1 + daily_return)
-                daily_portfolio_values.append(bnh_value)
-                
-            # Calculate metrics
-            final_value = bnh_value
-            total_return_pct = (final_value - 100) / 100
-            profit = final_value - 100
-            
-            daily_returns = pd.Series(daily_portfolio_values).pct_change().fillna(0)
-            risk_pct = daily_returns.std()
-            sharpe_ratio = (daily_returns.mean() / risk_pct) * np.sqrt(252) if risk_pct > 0 else 0
-            
-            results.append({
-                'ticker': ticker,
-                'strategy': 'Buy and Hold',
-                'final_value': final_value,
-                'profit': profit,
-                'total_return_pct': total_return_pct,
-                'risk_pct': risk_pct,
-                'sharpe_ratio': sharpe_ratio
-            })
-            
-        return pd.DataFrame(results)
+    def __init__(self):
+        super().__init__()
+        self.name = "Buy and Hold"
 
-    # --- Strategy 3: Raw SVC Signal (Bonus) ---
+    def trade_stock(self, row, cash, stock_value):
+        if cash > 0:
+            stock_value += cash
+            cash = 0
+        
+        return (cash, stock_value)
+
+# --- Strategy 3: Raw SVC Signal (Bonus) ---
 
 class RawSvc(Strategy):
     def __init__(self, svc_buy_threshold=0.5, svc_sell_threshold=-0.5):
-        self.svc_buy = 0.5
-        self.svc_sell = -0.5
+        super().__init__()
+        self.svc_buy = svc_buy_threshold
+        self.svc_sell = svc_sell_threshold
+        self.name = "Raw SVC"
 
-    def run(self, test_data):
-        """
-        Backtests a strategy based only on raw SVC thresholds.
-        'test_data' must include 'ticker', 'date', 'change_day', and 'svc'.
-        """
-        print("--- Running Raw SVC Signal Simulation ---")
-        results = []
+    def trade_stock(self, row, cash, stock_value):
+        # Trade based on raw SVC, not the SVM signal
+        svc = row['svc']
+                
+        if svc > self.svc_buy: # Buy
+            trade_amount = cash * 0.10
+            cash -= trade_amount
+            stock_value += trade_amount
+        elif svc < self.svc_sell: # Sell
+            trade_amount = stock_value * 0.10
+            stock_value -= trade_amount
+            cash += trade_amount
         
-        for ticker in test_data['ticker'].unique():
-            ticker_df = test_data[test_data['ticker'] == ticker].sort_values('date')
-            if ticker_df.empty:
+        return (cash, stock_value)
+
+# Default expected growth for a class: Geometric mean of minimum and maximum growth
+def default_expected_growth(thresholds):
+    growth = dict()
+    growth[0] = 0.0
+    for i, (_, threshold) in enumerate(thresholds):
+        next = None
+        if i + 1 < len(thresholds):
+            _, next = thresholds[i+1]
+        else:
+            next = threshold * 2
+        
+        growth[i+1] = math.sqrt(threshold * next)
+    return growth
+
+# A strategy that uses the Random Forest's probabilities of each class of growth
+class SoftMax(Strategy):
+    # expected growth for each class
+    def __init__(self, beta=0.5, expected_growth=None, thresholds=None):
+        super().__init__()
+        
+        self.thresholds = thresholds
+        if expected_growth == None:
+            expected_growth = default_expected_growth(thresholds)
+        self.expected_growth = expected_growth
+        
+        self.beta = beta
+        self.name = f"SoftMax beta={beta}"
+        
+    def trade_day(self, rows):
+        # Prepare for total reorganization of assets
+        
+        # A dictionary representing the weight given to each stock
+        weights = dict()
+        total_weight = 0
+        total_assets = 0
+        for i, ticker in enumerate(self.tickers):
+            ticker_rows = rows.loc[rows["ticker"] == ticker]
+            if len(ticker_rows) == 0:
                 continue
-
-            cash = 100.0
-            stock_value = 0.0
-            daily_portfolio_values = [100.0]
-
-            for index, row in ticker_df.iterrows():
-                daily_return = row['change_day']
-                stock_value *= (1 + daily_return)
-                daily_portfolio_values.append(cash + stock_value)
-
-                # Trade based on raw SVC, not the SVM signal
-                svc = row['svc']
+            
+            row = ticker_rows.iloc[[0]]
+            
+            row_features = row[self.feature_cols]
+            row_scaled = self.scaler.transform(row_features)
+            probs = self.model.predict_proba(row_scaled)[0]
+            
+            expected_returns = 0
+            for classs, growth in self.expected_growth.items():
+                index = classs + len(self.thresholds)
+                probability = probs[index]
+                growth_rate = 1.0 + growth
                 
-                if svc > self.svc_buy: # Buy
-                    trade_amount = cash * 0.10
-                    cash -= trade_amount
-                    stock_value += trade_amount
-                elif svc < self.svc_sell: # Sell
-                    trade_amount = stock_value * 0.10
-                    stock_value -= trade_amount
-                    cash += trade_amount
+                expected_returns += growth_rate * probability
                 
-            # Calculate metrics
-            final_value = cash + stock_value
-            total_return_pct = (final_value - 100) / 100
-            profit = final_value - 100
+            weight = math.exp(expected_returns * self.beta)
+            # Keys for stock in "weights" are their index in self.tickers
+            weights[i] = weight
+            total_weight += weight
             
-            daily_returns = pd.Series(daily_portfolio_values).pct_change().fillna(0)
-            risk_pct = daily_returns.std()
-            sharpe_ratio = (daily_returns.mean() / risk_pct) * np.sqrt(252) if risk_pct > 0 else 0
+            # Reorganize all assets in stocks with data present
+            total_assets += self.stock_values[i]
+            total_assets += self.cashes[i]
+            self.stock_values[i] = 0
+            self.cashes[i] = 0
             
-            results.append({
-                'ticker': ticker,
-                'strategy': 'Raw SVC Signal',
-                'final_value': final_value,
-                'profit': profit,
-                'total_return_pct': total_return_pct,
-                'risk_pct': risk_pct,
-                'sharpe_ratio': sharpe_ratio
-            })
-            
-        return pd.DataFrame(results)
+        if total_weight == 0:
+            return
+        
+        for stock_index, weight in weights.items():
+            proportion = weight / total_weight
+            investment = total_assets * proportion
+            self.stock_values[stock_index] = investment
+        
+        #print(str(sum(self.stock_values)))
 
-
-
-STRATEGIES = [Svm(), BuyAndHold(), RawSvc()]

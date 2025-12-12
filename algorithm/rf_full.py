@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, accuracy_score
 import os
@@ -10,8 +11,15 @@ import trading_strategies
 
 print("Starting SVM multiclass model training script...")
 
-HOLD_THRESHOLD = 0.02  # Any move between -2% and +2% is a "Hold"
-SUPER_THRESHOLD = 0.1
+THRESHOLDS = [
+    ("Small", 0.025),
+    ("Mid", 0.05),
+    ("Great", 0.1),
+    ("Huge", 0.2),
+    ("Tremendous", 0.4),
+    ("Absurd", 0.8),
+]
+
 SCRIPT_DIR = os.path.dirname(__file__)
 SEMI_FULL = os.path.join(SCRIPT_DIR, 'full_merged_data.csv')
 INSIDER = os.path.join(SCRIPT_DIR, 'insider-data/2020-clean.csv')
@@ -37,11 +45,15 @@ insider_df.sort_values(by=['Ticker', 'Date'], inplace=True)
 
 # Engineering target
 def create_target(pct_change):
-    if pct_change > SUPER_THRESHOLD: return 2
-    elif pct_change > HOLD_THRESHOLD: return 1
-    elif pct_change > -SUPER_THRESHOLD and pct_change < -HOLD_THRESHOLD: return -1 
-    elif pct_change < -SUPER_THRESHOLD: return -2
-    else: return 0
+    thresholds_passed = 0
+    for (_, threshold) in THRESHOLDS:
+        if abs(pct_change) > threshold:
+            thresholds_passed += 1
+    
+    if pct_change < 0:
+        return - thresholds_passed
+    else:
+        return thresholds_passed
 
 semifull_df['target'] = semifull_df['next_day_pct_change'].apply(create_target)
 
@@ -102,12 +114,31 @@ y = data['target']
 print("\nClass Distribution in dataset:")
 print(y.value_counts(normalize=True) * 100)
 
+all_classes = sorted(y.unique())
+
+# Test-training split
+data["date"] = pd.to_datetime(data["date"],errors="coerce")
+#data.dropna(subset=["date"],inplace=True)
+
+data = data.sort_values(["date"])
+data = data.reset_index(drop=True)
 # Start in March 2020 so that we have 3 months of earlier data
-data["date"] = pd.to_datetime(data["date"])
 start_index = data.index[data["date"] >= pd.Timestamp("2020-03-01")][0]
-split_index = int((len(X) - start_index) * 0.8)
-X_train, y_train = X.iloc[start_index:split_index], y.iloc[start_index:split_index]
-X_test, y_test = X.iloc[split_index:], y.iloc[split_index:]
+print("Start")
+print(start_index)
+end_index = data.index[data["date"] < pd.Timestamp("2021-01-01")][-1]
+print("End")
+print(end_index)
+split_index = int((end_index - start_index) * 0.8 + start_index)
+print("Split")
+print(split_index)
+
+test_data = data.iloc[split_index:end_index].copy()
+
+X_train = X.iloc[start_index:split_index]
+y_train = y.iloc[start_index:split_index]
+X_test = X.iloc[split_index:end_index]
+y_test = y.iloc[split_index:end_index]
 
 print(f"\nTraining on {len(X_train)} samples, testing on {len(X_test)} samples.")
 
@@ -128,15 +159,41 @@ print("Model training complete.")
 
 
 y_pred = model.predict(X_test_scaled)
+#y_probs = model.predict_proba(X_test_scaled)
 print("\n" + "="*30)
 print("   Model Evaluation Results")
 print("="*30)
 print(f"Accuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%")
 print("\nClassification Report:")
+
+'''
+target_names = list()
+for i, (name, _) in enumerate(THRESHOLDS):
+    j = i + 1
+    target_names.append(f"{name} Buy ({j})")
+target_names.insert(0, "Hold (0)")
+for i, (name, _) in enumerate(THRESHOLDS):
+    j = i + 1
+    target_names.insert(0, f"{name} Sell (-{j})")
+'''
+target_names = list()
+for classs in all_classes:
+    name = None
+    if classs == 0:
+        name = "Hold (0)"
+    else:
+        threshold_name, _ = THRESHOLDS[int(abs(classs) - 1)]
+        if classs > 0:
+            name = f"{threshold_name} Buy ({classs})"
+        else:
+            name = f"{threshold_name} Sell ({classs})"
+    target_names.append(name)
+
 print(classification_report(
     y_test, 
     y_pred, 
-    target_names=['Super Sell(-2)', 'Sell (-1)', 'Hold (0)', 'Buy (1)', 'Super Buy(2)'],
+    labels=all_classes,
+    target_names=target_names,
     zero_division=0
 ))
 
@@ -157,39 +214,23 @@ print("-----------BACKTESTING WITH 100 AGAINST B&H--------------")
 print("="*60)
 
 # 1. Prepare test data for the strategy functions
-test_data = data.iloc[split_index:].copy()
 test_data['signal'] = y_pred # Add the model's predictions
 
 # 2. Run all strategies
 results = list()
-for strategy in trading_strategies.STRATEGIES:
-    res = strategy.run(test_data)
+
+STRATEGIES = [
+    trading_strategies.Svm(), 
+    trading_strategies.BuyAndHold(), 
+    trading_strategies.RawSvc(), 
+    trading_strategies.SoftMax(beta=0.5, thresholds=THRESHOLDS), 
+    trading_strategies.SoftMax(beta=1.0, thresholds=THRESHOLDS), 
+    trading_strategies.SoftMax(beta=2.0, thresholds=THRESHOLDS)
+]
+for strategy in STRATEGIES:
+    res = strategy.run(model, feature_cols, scaler, test_data)
     results.append(res)
 
 # 3. Combine and display results
-all_results = pd.concat(results)
-
-# --- Show Ticker-by-Ticker Results ---
-print("\n--- Detailed Results per Ticker (Top 10 by SVM Profit) ---")
-ticker_pivot = all_results.pivot(index='ticker', columns='strategy', values='profit')
-# Reorder columns for logical comparison
-ticker_pivot = ticker_pivot[['SVM Model', 'Raw SVC Signal', 'Buy and Hold']]
-print(ticker_pivot.sort_values(by='SVM Model', ascending=False).head(10).to_string(float_format="%.2f"))
-
-# --- Show Average (Portfolio) Results ---
-print("\n--- Average (Portfolio) Results Across All Tickers ---")
-avg_results = all_results.groupby('strategy').mean(numeric_only=True)
-# Reorder index for logical comparison
-avg_results = avg_results.reindex(['SVM Model', 'Raw SVC Signal', 'Buy and Hold'])
-# Format for display
-avg_results['final_value'] = avg_results['final_value'].map('${:,.2f}'.format)
-avg_results['profit'] = avg_results['profit'].map('${:,.2f}'.format)
-avg_results['total_return_pct'] = avg_results['total_return_pct'].map('{:.2%}'.format)
-avg_results['risk_pct'] = avg_results['risk_pct'].map('{:.2%}'.format)
-avg_results['sharpe_ratio'] = avg_results['sharpe_ratio'].map('{:.2f}'.format)
-
-print(avg_results.to_string())
-print("="*30) 
-all_results = pd.concat(results)
+all_results = pd.concat(results, ignore_index=True)
 print(all_results)
-print('='*30)
