@@ -1,0 +1,19 @@
+# Virtual Environment
+.venv/
+venv/
+
+# API Credentials - VERY IMPORTANT
+praw.ini
+
+# Log files
+*.log
+
+# Local Data Files
+*.csv
+
+
+# Python cache
+__pycache__/
+
+# macOS metadata
+.DS_Store

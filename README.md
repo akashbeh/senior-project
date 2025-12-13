@@ -1,4 +1,4 @@
-# Stock Analysis System (SAS) User Manual  
+# Q Stock Prediction (SAS) User Manual  
 Version 1.0  
 CMSI 4071  
 Fall 2025
@@ -7,7 +7,7 @@ Fall 2025
 
 # 1. Introduction
 
-The Stock Analysis System (SAS) is a command line software that analyzes social media sentiment, historical market data, and insider trading activity to generate Buy, Sell, or Hold recommendations. The system collects social media comments, processes sentiment, aggregates results into financial signals, trains predictive models, evaluates trading strategies, and produces PDF reports. This manual describes installation, configuration, execution, and troubleshooting for users without technical expertise.
+Q Stock Prediction (SAS) is a command line software that analyzes social media sentiment, historical market data, and insider trading activity to generate Buy, Sell, or Hold recommendations. The system collects social media comments, processes sentiment, aggregates results into financial signals, trains predictive models, evaluates trading strategies, and produces PDF reports. This manual describes installation, configuration, execution, and troubleshooting for users without technical expertise.
 
 ---
 
@@ -33,13 +33,23 @@ Obtain the project by cloning or downloading:
 git clone <repository-url>
 or download the ZIP and extract it.
 
-## 3.2 Navigate to the Project Directory
-cd path/to/sas-project
+## 3.2 Navigate to the Program Directory
+cd senior-project/program
 
 ## 3.3 Install Dependencies
+Install dependencies with this command:
+
 pip install -r requirements.txt
 
-## 3.4 Configure Reddit API Credentials
+---
+
+# 4. Configuration
+Some of this configuration may not be necessary depending on later steps.
+
+## 4.1 SEC Edgar Identity
+In Insider-trading/identity.py change IDENTITY to your own email. 
+
+## 4.2 Configure Reddit API Credentials
 Create or edit the file:  
 ~/.config/praw/praw.ini  
 Add the following content:  
@@ -50,30 +60,104 @@ username=YOUR_USERNAME
 password=YOUR_PASSWORD  
 user_agent="SAS Sentiment Scraper"
 
-## 3.5 Configure SEC Edgar Identity
-In insider scripts replace:  
-set_identity("sgunawa7@lion.lmu.edu")  
-with:  
-set_identity("your@email")
+## 4.3 Configure Twitter API
+In sentiment_algo/scrape_twitter.py, insert your own API_KEY.
 
 ---
 
-# 4. Directory Structure
+# 5. Collect data
+An existing Random Forest model has been trained and saved. In order to use it, data must be collected. 
 
+Data collection could also be used to re-train the model over a different time period (ours was 2020).
+
+## 5.1 Historical prices (Directory: historical_prices/)
+The fundamental data.
+
+Run historical_prices/download_price_history.py.
+
+
+## 5.2 Insider Trading
+
+### 5.2.2 Download data
+Run Insider-trading/group_by_ticker.py. Change START_DATE and END_DATE as desired.
+
+Start date should be at least 3 days before end date, because insider trading data must be released within about 3 days.
+
+For training in final_algo/rf_full.py, at least 3 months of insider trading data is required. Therefore if start date is not 3 months before, more data should be collected and merged (see below).
+
+### 5.2.3 Move data
+Move TransactionsByTicker.csv to ../data/insider-data.
+
+### 5.2.4 (Optional) Merge data
+Use data/insider-data/merge.py to merge multiple data sets. Make sure to change the filename constants at the top of the program.
+
+### 5.2.5 Clean data
+Use data/insider-data/clean.py to refine the data. Change the filenames before running.
+
+(The full process is described in data/insider-data/data-refinement.txt.)
+
+
+## 5.3 Sentiment Analysis (Directory: sentiment_algo/)
+Various sources of data are available here; the analysis will ultimately be saved in signals/. The Reddit API can only download recent data, so for training, you can either scrape present data repeatedly, or use the archive. The archive is optimal for generating consistent sentiment signals, but takes a long time to download and process.
+
+### 5.3.1 (Optimal) Reddit Archive
+Reddit archives are available at the-eye.eu . Subreddits such as r/wallstreetbets (our SUBREDDIT_LIST is in scrape_reddit.py) can be downloaded.
+
+Download to data/reddit-archive/. Then run reddit_archive_parser.py .
+
+In case the process is interrupted, it can be resumed by re-running and selecting "y" to loading from the checkpoint file. Otherwise, select "n".
+
+### 5.3.2  Scraping data
+Data may be scraped from Reddit and/or Twitter.
+
+#### 5.3.2.1 Scraping Reddit
+Requires Configuration 4.2
+
+The Sentiment Pipeline run_pipeline.sh collects Reddit comments for that day and generates corresponding sentiment signals. With a cronjob, it can be set up to run daily.
+
+#### 5.3.2.2 Twitter Scraper
+Requires Configuration 4.3
+
+The Twitter Scraper scrape_twitter.py collects a large number of tweets. To use it, insert your API_KEY.
+
+#### 5.3.2.3 Merge data
+Now go to data/ and run merge_sentiment_price.py.
+
+#### 5.3.2.4 (Optional) Generate report
+If you have run the Sentiment Pipeline consistently, you may generate the weekly summary using generate_report.py.
+
+## 5.4 Finish data
+In data/, you should now have merged_data.csv. Run finish_merge.py to get full_full_data.csv.
+
+---
+
+# 6. (Optional) Train model
+CAUTION: This will overwrite the existing saved model.
+
+Go to final_algo/. Run rf_full.py.
+
+You can also run rf_no_insider.py if you did not collect the insider trading data. A separate model is saved.
+
+---
+
+# 7. Predict stocks
+Data for the past 3 months must be gathered through the above steps to calculate all metrics used as features.
+
+Filter your data through LibreOffice Calc, Microsoft Excel, etc to only include today's data. Then rename your data to present_data.csv and place it in data/. As an example, one of our days of data was taken for present_data.csv.
+
+Run predict.py and you will receive recommendations.
+
+---
+
+
+
+
+# 8. Directory Structure
 ```
-# 4. Directory Structure
-
-sas-repository/
-│
+sas_repository/
+|
 ├── ABCDR Presentation/
 ├── Assignments/
-├── Insider-trading/
-│   ├── Price_correlation.py
-│   ├── README.md
-│   ├── group_by_ticker.py
-│   ├── insider_aggregate.py
-│   ├── insider_company.py
-│   └── requirements.txt
 │
 ├── Instructor Feedback/
 ├── Poster/
@@ -81,33 +165,48 @@ sas-repository/
 ├── SDL/
 ├── Status Reports/
 │
-├── data/
-│   └── nasdaq_screener.csv
-│
-├── sentiment_algo/
-│   ├── weekly-summaries/
-│   ├── .gitignore
-│   ├── comment_scraper.py
-│   ├── download_price_history.py
-│   ├── generate_report.py
-│   ├── historical-weekly-change.pdf
-│   ├── randomForest.py
-│   ├── requirements.txt
-│   ├── run_pipeline.sh
-│   ├── sentiment_analyzer.py
-│   ├── signal_generator.py
-│   ├── svm_stock_classifier.py
-│   └── trading_strategies.py
-│
-├── tw_scraper/
-│
-│
+├── program
+│   ├── data
+│   │   ├── finish_merge.py
+│   │   ├── full_full_data.csv
+│   │   ├── insider-data
+│   │   │   ├── clean.py
+│   │   │   ├── data-refinement.txt
+│   │   │   └── merge.py
+│   │   ├── merged_data.csv
+│   │   ├── merge_sentiment_price.py
+│   │   ├── nasdaq_screener.csv
+│   │   └── reddit-archive/
+│   ├── final_algo
+│   │   ├── rf_full.py
+│   │   ├── rf_no_insider.py
+│   │   └── trading_strategies.py
+│   ├── historical_prices
+│   │   ├── download_price_history.py
+│   │   └── historical_prices.csv
+│   ├── Insider-trading
+│   │   ├── group_by_ticker.py
+│   │   ├── identity.py
+│   │   ├── insider_aggregate.py
+│   │   ├── insider_company.py
+│   │   ├── Price_correlation.py
+│   │   ├── README.md
+│   └── sentiment_algo
+│       └── weekly-summaries/
+│       ├── generate_report.py
+│       ├── historical-weekly-change.pdf
+│       ├── reddit_archive_parser.py
+│       ├── requirements.txt
+│       ├── run_pipeline.sh
+│       ├── scrape_reddit.py
+│       ├── scrape_twitter.py
+│       ├── sentiment_analyzer.py
+│       ├── signal_generator.py
+│       ├── svm_stock_classifier.py
+|
+├── README.md
 └── features.txt
-
-
-
 ```
-
 
 ---
 
@@ -162,15 +261,10 @@ python insider_aggregate.py
 Outputs:  
 transactions_aggregate.csv
 
-## 7.2 Group Insider Transactions by Ticker
-python group_by_ticker.py  
-Outputs:  
-transactions_by_ticker4.csv
-
-## 7.3 List Insiders for a Company
+## 7.2 List Insiders for a Company
 python insider_company.py
 
-## 7.4 Correlate Insider Trades with Price Movement
+## 7.3 Correlate Insider Trades with Price Movement
 python Price_correlation.py
 
 ---
@@ -213,7 +307,7 @@ Run the pipeline for several days to accumulate signal history.
 
 # 11. Support
 
-For assistance contact any of the reporistory contributors (except @bjohnson05)
+For assistance contact any of the repository contributors (except @bjohnson05)
 
 ---
 

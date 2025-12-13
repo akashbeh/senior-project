@@ -1,0 +1,100 @@
+$ python3 rf_full.py
+Successfully loaded /home/akashs/Documents/LMU/senior/senior-project/program/final_algo/../data/full_full_data.csv
+Total 2945 data points ready for training and testing.
+
+Class Distribution in dataset:
+target
+ 0.0    55.721562
+-1.0    14.091681
+ 1.0     9.032258
+-2.0     8.726655
+ 2.0     4.482173
+-3.0     3.667233
+ 3.0     2.071307
+-4.0     0.916808
+ 4.0     0.747029
+-5.0     0.237691
+ 5.0     0.135823
+ 6.0     0.101868
+-6.0     0.067912
+Name: proportion, dtype: float64
+
+Training on 1983 samples, testing on 496 samples.
+Training Random Forest Classifier...
+Model training complete.
+Model saved to rf_full
+
+==============================
+   Model Evaluation Results
+==============================
+Accuracy: 96.17%
+
+Classification Report:
+                        precision    recall  f1-score   support
+
+    Absurd Sell (-6.0)       0.00      0.00      0.00         0
+Tremendous Sell (-5.0)       0.00      0.00      0.00         0
+      Huge Sell (-4.0)       0.00      0.00      0.00         4
+     Great Sell (-3.0)       0.79      0.88      0.83        17
+       Mid Sell (-2.0)       0.98      0.98      0.98        44
+     Small Sell (-1.0)       0.98      1.00      0.99        58
+              Hold (0)       0.99      1.00      0.99       294
+       Small Buy (1.0)       0.98      0.92      0.95        53
+         Mid Buy (2.0)       0.76      0.93      0.84        14
+       Great Buy (3.0)       0.43      0.50      0.46         6
+        Huge Buy (4.0)       1.00      0.33      0.50         6
+  Tremendous Buy (5.0)       0.00      0.00      0.00         0
+      Absurd Buy (6.0)       0.00      0.00      0.00         0
+
+              accuracy                           0.96       496
+             macro avg       0.53      0.50      0.50       496
+          weighted avg       0.96      0.96      0.96       496
+
+
+--- Feature Importance ---
+Which features mattered most?
+1. change_day: 0.5605
+2. change_week: 0.0769
+3. change_month: 0.0438
+4. change_3mo: 0.0327
+5. change_9mo: 0.0316
+6. change_1yr: 0.0314
+7. change_6mo: 0.0283
+8. mean_sentiment: 0.0240
+9. sentiment_change: 0.0234
+10. Buyer Change Day: 0.0226
+11. Buyer Change Month: 0.0214
+12. Buyer Change TriMonth: 0.0213
+13. Buyer Change Week: 0.0208
+14. svc: 0.0190
+15. comment_count: 0.0141
+16. volume_change: 0.0119
+17. Trade Direction TriMonth: 0.0087
+18. Trade Direction Month: 0.0047
+19. Trade Direction Week: 0.0018
+20. Trade Direction Day: 0.0012
+==============================
+
+============================================================
+-----------BACKTESTING WITH 100 AGAINST B&H--------------
+============================================================
+
+--- Running SVM Model Strategy Simulation ---
+
+--- Running Buy and Hold Strategy Simulation ---
+
+--- Running Raw SVC Strategy Simulation ---
+
+--- Running SoftMax beta=0.5 Strategy Simulation ---
+
+--- Running SoftMax beta=1.0 Strategy Simulation ---
+
+--- Running SoftMax beta=2.0 Strategy Simulation ---
+           strategy   final_value      profit  total_return_pct  risk_pct  sharpe_ratio
+0         SVM Model  23042.742999   42.742999          0.001858  0.000095      7.388510
+1      Buy and Hold  23910.356247  910.356247          0.039581  0.001516      9.690937
+2           Raw SVC  23019.740525   19.740525          0.000858  0.000058      5.630191
+3  SoftMax beta=0.5  23918.317379  918.317379          0.039927  0.001453     10.200588
+4  SoftMax beta=1.0  23923.864670  923.864670          0.040168  0.001455     10.249281
+5  SoftMax beta=2.0  23933.426035  933.426035          0.040584  0.001463     10.296142
+
