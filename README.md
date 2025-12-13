@@ -1,4 +1,4 @@
-# Q Stock Prediction (SAS) User Manual  
+# Stock Analysis System (SAS) User Manual  
 Version 1.0  
 CMSI 4071  
 Fall 2025
@@ -7,7 +7,7 @@ Fall 2025
 
 # 1. Introduction
 
-Q Stock Prediction (SAS) is a command line software that analyzes social media sentiment, historical market data, and insider trading activity to generate Buy, Sell, or Hold recommendations. The system collects social media comments, processes sentiment, aggregates results into financial signals, trains predictive models, evaluates trading strategies, and produces PDF reports. This manual describes installation, configuration, execution, and troubleshooting for users without technical expertise.
+Stock Analysis System (SAS) is a command line software that analyzes social media sentiment, historical market data, and insider trading activity to generate Buy, Sell, or Hold recommendations. The system collects social media comments, processes sentiment, aggregates results into financial signals, trains predictive models, evaluates trading strategies, and produces PDF reports. This manual describes installation, configuration, execution, and troubleshooting for users without technical expertise.
 
 ---
 
@@ -96,6 +96,20 @@ Use data/insider-data/clean.py to refine the data. Change the filenames before r
 
 (The full process is described in data/insider-data/data-refinement.txt.)
 
+### 5.2.6 (Optional) Insider Trading Tools
+
+#### 5.2.6.1 Aggregate Insider Transactions
+python insider_aggregate.py  
+Outputs:  
+transactions_aggregate.csv
+
+#### 5.2.6.2 List Insiders for a Company
+python insider_company.py
+
+#### 5.2.6.3 Correlate Insider Trades with Price Movement
+python Price_correlation.py
+
+
 
 ## 5.3 Sentiment Analysis (Directory: sentiment_algo/)
 Various sources of data are available here; the analysis will ultimately be saved in signals/. The Reddit API can only download recent data, so for training, you can either scrape present data repeatedly, or use the archive. The archive is optimal for generating consistent sentiment signals, but takes a long time to download and process.
@@ -148,9 +162,6 @@ Filter your data through LibreOffice Calc, Microsoft Excel, etc to only include 
 Run predict.py and you will receive recommendations.
 
 ---
-
-
-
 
 # 8. Directory Structure
 ```
@@ -210,66 +221,21 @@ sas_repository/
 
 ---
 
-# 5. Running the Software
+# 9. Running the Software
 
-SAS is operated through the terminal. Each stage must be executed in order.
-
----
-
-# 6. SAS Workflow and Features
-
-## 6.1 Step 1: Collect Reddit Comments
-python sentiment_algo/comment_scraper.py  
-Outputs:  
-daily_comments/YY-MM-DD.csv
-
-## 6.2 Step 2: Run Sentiment Analysis
-python sentiment_algo/sentiment_analyzer.py  
-Outputs:  
-daily_sentiment/YY-MM-DD.csv
-
-## 6.3 Step 3: Aggregate Sentiment and Compute SVC
-python sentiment_algo/aggregate_sentiment.py  
-Outputs:  
-daily_signals/YY-MM-DD_signals.csv
-
-## 6.4 Step 4: Download Historical Price Data
-python download_price_history.py  
-Outputs:  
-historical_prices.csv
-
-## 6.5 Step 5: Train the SVM Model
-python svm_stock_classifier.py  
-Outputs:  
-full_merged_data.csv
-
-## 6.6 Step 6: Train the Random Forest Model
-python randomForest.py
-
-## 6.7 Step 7: Generate Weekly and Historical PDF Reports
-python sentiment_algo/generate_report.py  
-Outputs:  
-weekly-summaries/  
-historical-weekly-change.pdf
+SAS is operated through the terminal as described above. Each stage must be operated in order.
 
 ---
 
-# 7. Insider Trading Tools
+# 10. SAS Performance
 
-## 7.1 Aggregate Insider Transactions
-python insider_aggregate.py  
-Outputs:  
-transactions_aggregate.csv
+SAS trading strategies outperformed Buy and Hold on the testing set with better return (4.0584% vs 3.9581%), less risk (0.1463% vs 0.1516%), and consequently higher Sharpe Ratio (10.2961 vs 9.6909). The full results are in program/final_algo/rf_full_results.txt. 
 
-## 7.2 List Insiders for a Company
-python insider_company.py
-
-## 7.3 Correlate Insider Trades with Price Movement
-python Price_correlation.py
+An example of predictions is in program/final_algo/predict_example.txt. The examples are drawn from the merged_data.csv, full_full_data.csv, and present_data.csv in the repository (program/data/).
 
 ---
 
-# 8. Stopping the Software
+# 11. Stopping the Software
 
 Windows:
 Ctrl + C
@@ -279,14 +245,14 @@ Control + C
 
 ---
 
-# 9. Uninstallation
+# 12. Uninstallation
 
 Delete the project folder, then optionally run:
 pip uninstall -r requirements.txt
 
 ---
 
-# 10. Troubleshooting
+# 13. Troubleshooting
 
 ## Issue: Reddit scraper cannot authenticate
 Verify `praw.ini` credentials.
@@ -305,13 +271,13 @@ Run the pipeline for several days to accumulate signal history.
 
 ---
 
-# 11. Support
+# 14. Support
 
 For assistance contact any of the repository contributors (except @bjohnson05)
 
 ---
 
-# 12. Glossary
+# 15. Glossary
 
 | Term | Definition |
 |------|-------------|
@@ -323,7 +289,7 @@ For assistance contact any of the repository contributors (except @bjohnson05)
 
 ---
 
-# 13. Acronyms
+# 16. Acronyms
 
 | Acronym | Meaning |
 |---------|----------|
