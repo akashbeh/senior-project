@@ -2,13 +2,10 @@ import pandas as pd
 from pandas import * 
 from edgar import *
 
-OUTPUT = 'transactions_by_ticker4.csv'
-
 set_identity("sgunawa7@lion.lmu.edu")
 
-filings = get_filings(form="4", filing_date='2025-07-01:2025-11-29')
+filings = get_filings(form="4", filing_date='2020-01-01:2020-06-30')
 
-print("here1")
 dataframes = []
 for f in filings:
     try:
@@ -22,10 +19,10 @@ for f in filings:
 
 transaction = pd.concat(dataframes, ignore_index=True, sort=False) if dataframes else pd.DataFrame()
 
-print("here2")
-
 # Filter for Purchase and Sale transactions
 filtered = transaction[transaction['Transaction Type'].isin(['Purchase', 'Sale'])]
+filtered.to_csv("TransactionsByDate.csv", index=False)
+
 # Group by Ticker
 grouped = filtered.groupby('Ticker')
 
@@ -48,7 +45,7 @@ def compute_metrics(df):
     })
 
 summary = grouped.apply(compute_metrics, include_groups=False)
-summary.to_csv(OUTPUT)
+summary.to_csv("TransactionByTicker.csv")
 
 
 
