@@ -224,18 +224,19 @@ def default_expected_growth(thresholds):
     growth[0] = (0.0, (thresholds[0][1], -thresholds[0][1]))
     for i, (_, threshold) in enumerate(thresholds):
         next = None
-        pos_limits = (threshold, next)
         neg_limits = None
         if i + 1 < len(thresholds):
             _, next = thresholds[i+1]
             neg_limits = (-next, -threshold)
+            pos_limits = (threshold, next)
         else:
             next = threshold * 2
             neg_limits = (None, -threshold)
+            pos_limits = (threshold, None)
         
         expected_growth = math.sqrt(threshold * next)
         growth[i+1] = (expected_growth, pos_limits)
-        growth[-i-1] = (expected_growth, neg_limits)
+        growth[-i-1] = (-expected_growth, neg_limits)
     return growth
 
 # A strategy that uses the Random Forest's probabilities of each class of growth
