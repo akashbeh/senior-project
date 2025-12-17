@@ -30,19 +30,22 @@ DATABASE DESIGN AND DESCRIPTION:
 
 ----------------------------------------------
 OVERALL ASSESSMENT:
-   Category                          Points
-   CSC/CSU Descriptions:                0 of  2
-   Class Descriptions:                  0 of  3
-   Interface Descriptions:              0 of  3
-   Data structure Descriptions:         0 of  1
-   Design diagrams:                     0 of  4
-   Database design/descriptions:        2 of  2
-                                     ===========
-   Subtotal                             2 of 15
+   Category                             Points      re-eval
+   CSC/CSU Descriptions:                0 of  2     2 of  2
+   Class Descriptions:                  0 of  3     3 of  3
+   Interface Descriptions:              0 of  3     3 of  3
+   Data structure Descriptions:         0 of  1     1 0f  1
+   Design diagrams:                     0 of  4     1 of  4
+   Database design/descriptions:        2 of  2     0 of  2
+                                     ===========   ========
+   Subtotal                             2 of 15    10 of 15
    ------------------------------------------------------
    Total Percentage:  2/15 = 13.33%
 
-
 I don't see a detailed section in your SDD or a separate document either.
 I can't evaluate what isn't there....
+
+RE-EVALUATED AT SEMESTER'S END
+   ------------------------------------------------------
+   Total Percentage:   10/15 = 66.7%
 

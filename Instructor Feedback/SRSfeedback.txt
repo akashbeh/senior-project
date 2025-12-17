@@ -31,14 +31,14 @@ ENVIRONMENT REQUIREMENTS:
 Lists tools and infrastructure, but lacks structure and completeness.
 
 OVERALL ASSESSMENT:
-   Category                          Points
-   Component Breakdown                 1/1
-   Functional Requirements             0/4
-   Performance Requirements            0/2
-   Environment Requirements            0/1
-                                     =====
-   Subtotal                            1/8
-   Preliminary Schedule                1/2
+   Category                          Points     re-eval'd
+   Component Breakdown                 1/1         1/1
+   Functional Requirements             0/4         2/4
+   Performance Requirements            0/2         2/2
+   Environment Requirements            0/1         1/1
+                                     =====       =====
+   Subtotal                            1/8         6/8
+   Preliminary Schedule                1/2         1/2
    ------------------------------------------------------
    Total Percentage:   2/10 = 2% which is not the best for this deliverable.
 
@@ -50,6 +50,10 @@ Your preliminary schedule was supposed to be a Gantt or PERT chart.  You've
    simply listed the deliverables with the weeks you're planning.  Make an
    actual schedule chart that shows the durations and linkages with your
    development.  Then include this in your SDP.
+
+RE-EVALUATED AT SEMESTER'S END
+   ------------------------------------------------------
+   Total Percentage:   7/10 = 70% which is a C on this deliverable
 
 Nice work on this deliverable!  Make the changes indicated by the end of the
 semester for full credit on the document.
