@@ -8,23 +8,90 @@ DETAILED CSC AND CSU DESCRIPTIONS:
    Not done
 
 DETAILED CLASS DESCRIPTIONS:
-   Not done
-
+   Strengths:
+      Each class includes:
+         Purpose
+         Fields/internal state
+         Methods with explanations
+         Inputs/outputs
+         Interactions with other CSUs
+         Mapping to SRS requirements
+      Logical grouping by CSC (Data Collection, Sentiment Analysis, Signal
+         Generation, Modeling, Recommendations, Insider Data, Reporting).
+      Clear alignment with functional requirements (e.g., SRS 1.3.2–1.3.6).
+      Includes practical implementation details (e.g., Python modules,
+         libraries like pysentimiento, yfinance).
+   Suggestions:
+      Add visibility and relationships
+         (public/private, inheritance, composition).
+      Include state diagrams or lifecycle notes for dynamic components
+         (e.g., DailySignalGenerator).
+      Provide algorithm pseudo-code for complex methods
+         (e.g., calculate_svc(), engineer_price_features()).
+      Document error handling strategies (e.g., API failures, missing data).
+      Explicitly link each class to requirement IDs in a traceability table.
 
 DETAILED INTERFACE DESCRIPTIONS:
-   Not done
-
+   Strengths:
+      Interfaces between CSUs are clearly listed
+         (e.g., CommentScraper -> SentimentAnalyzer,
+         DailySignalGenerator -> Classifiers).
+      Specifies data formats (CSV) and fields for each interface.
+      Covers integration points for insider data and modeling pipeline.
+   Suggestions:
+      Provide formal interface tables with:
+         Method signatures
+         Input/output types
+         Error conditions
+      Include sequence diagrams for critical flows
+         (e.g., social media -> sentiment -> signal -> model -> strategy).
+      Document data transfer protocols
+         (e.g., synchronous vs asynchronous, file naming conventions).
 
 DETAILED DATA STRUCTURE DESCRIPTIONS:
-   Not done
-
+   Strengths:
+      Defines key structures:
+         Social Media Record
+         Sentiment Structure
+         Price Structure
+         SVC Feature Structure
+         ML Feature Vector
+         Strategy Output
+      Includes field names and descriptions.
+   Suggestions:
+      Add data types for all fields (some are missing).
+      Include validation rules (e.g., ticker format, sentiment score range).
+      Provide serialization examples (JSON or CSV samples).
+      Document relationships and cardinality
+         (e.g., one ticker -> many sentiment records).
 
 DETAILED DESIGN DIAGRAMS:
-   Not done
-
+   Strengths
+      Diagrams are consistent with the SDD’s CSC decomposition and reflect
+         the end-to-end pipeline from data collection through reporting.
+      They highlight key responsibilities that match your class methods
+         and interface narratives.
+      The deployment context diagram adds clarity on environment, boundaries,
+         and artifacts—valuable for both Agile onboarding and
+         Waterfall documentation.
+   Suggestions
+      Traceability: Add CSU names/methods to boxes/arrows to tie diagrams
+         directly to 6.3.1 entries.
+      Interface Formality: Label arrows with formats/fields; add
+         error-handling annotations and protocols to meet 6.3.2 expectations.
+      Data Schemas: Include field/type tables (mini legends) near flows;
+         add validation rules in callouts for 6.3.3 completeness.
+      Model Completeness: Include RandomForest path and Insider Data CSC
+         processing blocks explicitly.
+      Behavioral Diagrams: Add a sequence diagram with lifelines/method
+         calls or enhance Diagram 3 with swimlanes; consider a state
+         diagram for model lifecycle or signal generation.
+      Operational Details: Show retry/backoff, scheduling,
+         file naming/versioning, and security considerations
+         (API key handling) in the deployment diagram.
 
 DATABASE DESIGN AND DESCRIPTION:
-   Not done
+   Not applicable
 
 
 
@@ -35,10 +102,10 @@ OVERALL ASSESSMENT:
    Class Descriptions:                  0 of  3     3 of  3
    Interface Descriptions:              0 of  3     3 of  3
    Data structure Descriptions:         0 of  1     1 0f  1
-   Design diagrams:                     0 of  4     1 of  4
-   Database design/descriptions:        2 of  2     0 of  2
+   Design diagrams:                     0 of  4     3 of  4
+   Database design/descriptions:        2 of  2     2 of  2
                                      ===========   ========
-   Subtotal                             2 of 15    10 of 15
+   Subtotal                             2 of 15    14 of 15
    ------------------------------------------------------
    Total Percentage:  2/15 = 13.33%
 
@@ -49,3 +116,9 @@ RE-EVALUATED AT SEMESTER'S END
    ------------------------------------------------------
    Total Percentage:   10/15 = 66.7%
 
+Overall Impression
+Your document is very strong for Agile and partially compliant with Waterfall
+   standards.  It includes detailed class descriptions, interface
+   specifications, data structures, and a class diagram.  However, some
+   formal elements required for Waterfall completeness - such as traceability
+   matrices, algorithm pseudo-code, and explicit error handling—are missing.
